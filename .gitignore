@@ -1,0 +1,4 @@
+# Add sensitive files to .gitignore if not already there
+log.json
+parsed-log.txt
+*.log
