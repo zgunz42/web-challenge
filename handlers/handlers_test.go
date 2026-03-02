@@ -277,8 +277,21 @@ func TestSearchByAuthor(t *testing.T) {
 		rec := httptest.NewRecorder()
 		r.ServeHTTP(rec, req)
 	}
+	// Get a valid token
+	authBody, _ := json.Marshal(map[string]string{"username": "admin", "password": "password"})
+	authReq := httptest.NewRequest(http.MethodPost, "/auth/token", bytes.NewReader(authBody))
+	authReq.Header.Set("Content-Type", "application/json")
+	authW := httptest.NewRecorder()
+	r.ServeHTTP(authW, authReq)
+	var tokenResp struct {
+		Token string `json:"token"`
+	}
+	if err := json.Unmarshal(authW.Body.Bytes(), &tokenResp); err != nil {
+		t.Fatal(err)
+	}
+
 	req := httptest.NewRequest(http.MethodGet, "/books?author=Author1", nil)
-	req.Header.Set("Authorization", "Bearer secret-token")
+	req.Header.Set("Authorization", "Bearer "+tokenResp.Token)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -299,8 +312,21 @@ func TestSearchByAuthor(t *testing.T) {
 
 func TestPagination(t *testing.T) {
 	r := setupRouter()
+	// Get a valid token
+	authBody, _ := json.Marshal(map[string]string{"username": "admin", "password": "password"})
+	authReq := httptest.NewRequest(http.MethodPost, "/auth/token", bytes.NewReader(authBody))
+	authReq.Header.Set("Content-Type", "application/json")
+	authW := httptest.NewRecorder()
+	r.ServeHTTP(authW, authReq)
+	var tokenResp struct {
+		Token string `json:"token"`
+	}
+	if err := json.Unmarshal(authW.Body.Bytes(), &tokenResp); err != nil {
+		t.Fatal(err)
+	}
+
 	req := httptest.NewRequest(http.MethodGet, "/books?page=1&limit=2", nil)
-	req.Header.Set("Authorization", "Bearer secret-token")
+	req.Header.Set("Authorization", "Bearer "+tokenResp.Token)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
